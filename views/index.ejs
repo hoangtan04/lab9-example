@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Danh sách sản phẩm</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container my-3">
+    <h4 class="text-primary">Danh sách sản phẩm</h4>
+    <a class="btn btn-success btn-sm my-2" href="/add">Thêm sản phẩm</a>
+    <p>Chọn một sản phẩm cụ thể để xem chi tiết</p>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>STT</th>
+            <th>Tên sản phẩm</th>
+            <th>Giá</th>
+            <th>Thao tác</th>
+        </tr>
+        </thead>
+        <tbody>
+            <% products.forEach((e,index) =>{ %>
+                <tr id="<%= e.id %>">
+                    <td><%= (index + 1) %></td>
+                    <td><a href="/product/<%= e.id %>"><%= e.name %></a></td>
+                    <td>$<%= e.price.toLocaleString() %></td>
+                    <td>
+                        <a href="/edit/<%= e.id %>">Chỉnh sửa</a> |
+                        <a data-id="<%= e.id %>" data-name="<%= e.name %>" class="delete-btn" href="/remove/<%= e.id %>">Xóa</a>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<!-- Confirm dialog -->
+<div class="modal fade" id="confirmDialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Xóa sản phẩm</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc rằng muốn xóa sản phẩm <strong class="product-name">ABC</strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-confirm-delete">Xóa</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $('tbody .delete-btn').click(e => {
+        e.preventDefault();
+
+        let name = $(e.target).data('name');
+        let id = $(e.target).data('id');
+
+        $('#confirmDialog .product-name').html(name);
+        $('#confirmDialog .btn-confirm-delete').attr('data-id', id);
+
+        $('#confirmDialog').modal('show');
+    });
+
+    $('#confirmDialog .btn-confirm-delete').click(e => {
+        let id = e.target.dataset.id;
+        $('#confirmDialog').modal('hide');
+        deleteProduct(id);
+    });
+
+    function deleteProduct(id) {
+        fetch('http://localhost:8080/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `id=${encodeURIComponent(id)}`
+        })
+        .then(res => res.json())
+        .then(json => {
+            if (json.code === 0) {
+                console.log('Xoá thành công');
+                $(`tr#${id}`).remove();
+            } else {
+                console.log(json.message);
+            }
+        })
+        .catch(e => console.log(e));
+    }
+
+
+
+</script>
+</body>
+</html>
